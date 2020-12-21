@@ -17,7 +17,6 @@ typedef struct {
 } Piece;
 
 typedef struct {
-    SDL_Rect pieces[10][20];
     int grid[10][20];
     int color[10][20][3];
 } InactivePieces;
@@ -32,5 +31,9 @@ void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces);
 void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces);
 void inactivePieceDraw(Game *game, InactivePieces *inactivePieces);
 int inactivePieceCheck(Game *game, InactivePieces *inactivePieces);
+int inactivePieceClearRow(Game *game, InactivePieces *inactivePieces, int row);
+int inactivePieceCheckRowEmpty(Game *game, InactivePieces *inactivePieces, int row);
+void inactivePieceShiftRows(Game *game, InactivePieces *inactivePieces, int initialRow);
+void inactivePieceClearRows(Game *game, InactivePieces *inactivePieces);
 
 #endif

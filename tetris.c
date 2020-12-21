@@ -159,13 +159,14 @@ void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces)
     {
         x = (piece->tetromino[i].x / TILE_WIDTH);
         y = (piece->tetromino[i].y / TILE_HEIGHT);
-        inactivePieces->pieces[x][y] = piece->tetromino[i];
         inactivePieces->grid[x][y] = 1;
         for (j = 0; j < 3; j++)
         {
             inactivePieces->color[x][y][j] = piece->color[j];
         } 
     }
+
+    inactivePieceClearRows(game, inactivePieces);
 
     pieceInit(game, piece);
     return;
@@ -174,13 +175,16 @@ void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces)
 void inactivePieceDraw(Game *game, InactivePieces *inactivePieces)
 {
     int x, y;
+    SDL_Rect toDraw = {.x = 0, .y = 0, .w = TILE_WIDTH, .h = TILE_HEIGHT};
     for (x = 0; x < 10; x++)
     {
         for (y = 0; y < 20; y++)
         {
             if (inactivePieces->grid[x][y]) {
                 SDL_SetRenderDrawColor(game->renderer, inactivePieces->color[x][y][0], inactivePieces->color[x][y][1], inactivePieces->color[x][y][2], SDL_ALPHA_OPAQUE);
-                SDL_RenderFillRect(game->renderer, &inactivePieces->pieces[x][y]);
+                toDraw.x = x * TILE_WIDTH;
+                toDraw.y = y * TILE_HEIGHT;
+                SDL_RenderFillRect(game->renderer, &toDraw);
                 SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             }
         }
@@ -203,3 +207,55 @@ int inactivePieceCheck(Game *game, InactivePieces *inactivePieces)
     return -1;
 }
 
+int inactivePieceClearRow(Game *game, InactivePieces *inactivePieces, int row)
+{
+    int x, j;
+    for (x = 0; x < 10; x++)
+    {
+        inactivePieces->grid[x][row] = 0;
+        for (j = 0; j < 3; j++)
+        {
+            inactivePieces->color[x][row][j] = 0;
+        }
+    }
+    return row;
+}
+
+int inactivePieceCheckRowEmpty(Game *game, InactivePieces *inactivePieces, int row)
+{
+    int x;
+    for (x = 0; x < 10; x++)
+    {
+        if (inactivePieces->grid[x][row] != 0) return 0;
+    }
+    return 1;
+}
+
+void inactivePieceShiftRows(Game *game, InactivePieces *inactivePieces, int initialRow)
+{
+    int row, x, j;
+    for (row = initialRow; inactivePieceCheckRowEmpty(game, inactivePieces, row - 1) != 1; row -= 1)
+    {
+        if (inactivePieceCheckRowEmpty(game, inactivePieces, row) != 1) break;
+        for (x = 0; x < 10; x++)
+        {
+            inactivePieces->grid[x][row] = inactivePieces->grid[x][row - 1];
+            for (j = 0; j < 3; j++)
+            {
+                inactivePieces->color[x][row][j] = inactivePieces->color[x][row - 1][j];
+            }
+        }
+        inactivePieceClearRow(game, inactivePieces, row - 1);
+    }
+}
+
+void inactivePieceClearRows(Game *game, InactivePieces *inactivePieces)
+{
+
+    int row = inactivePieceCheck(game, inactivePieces);
+    while (row != -1)
+    {
+        inactivePieceShiftRows(game, inactivePieces, inactivePieceClearRow(game, inactivePieces, row));
+        row = inactivePieceCheck(game, inactivePieces);
+    }
+}
