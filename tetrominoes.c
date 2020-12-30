@@ -100,6 +100,5 @@ void tetrominoesInit(SDL_Rect tetrominoes[7][4])
 
     tetrominoes[6][0].y = 1 * TILE_HEIGHT; tetrominoes[6][1].y = 1 * TILE_HEIGHT;
     tetrominoes[6][2].y = 2 * TILE_HEIGHT; tetrominoes[6][3].y = 2 * TILE_HEIGHT;
-    return;
 }
 

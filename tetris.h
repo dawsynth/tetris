@@ -29,11 +29,12 @@ void pieceMove(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DI
 int pieceCollide(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DIRECTION dir);
 void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces);
 void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces);
+
 void inactivePieceDraw(Game *game, InactivePieces *inactivePieces);
 int inactivePieceCheck(Game *game, InactivePieces *inactivePieces);
 int inactivePieceClearRow(Game *game, InactivePieces *inactivePieces, int row);
 int inactivePieceCheckRowEmpty(Game *game, InactivePieces *inactivePieces, int row);
 void inactivePieceShiftRows(Game *game, InactivePieces *inactivePieces, int initialRow);
-void inactivePieceClearRows(Game *game, InactivePieces *inactivePieces);
+int inactivePieceClearRows(Game *game, InactivePieces *inactivePieces);
 
 #endif

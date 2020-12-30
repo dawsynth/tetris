@@ -31,12 +31,13 @@ void gameInit(Game *game)
         return;
     }
     game->time = 0;
+    game->score = 0;
+    game->level = 0;
+    game->rowsCleared = 0;
     game->w = DEFAULT_WINDOW_WIDTH;
     game->h = DEFAULT_WINDOW_HEIGHT;
     tetrominoesInit(game->tetrominoes);
-    return;
 }
-
 
 void gameTerm(Game *game)
 {
@@ -45,3 +46,30 @@ void gameTerm(Game *game)
 	SDL_Quit();    
 }
 
+void gameScoreUpdate(Game *game, unsigned int moreRowsCleared)
+{
+    switch (moreRowsCleared)
+    {
+        case 1:
+            game->score += 40 * (game->level + 1);
+            break;
+        case 2:
+            game->score += 100 * (game->level + 1);
+            break;
+         case 3:
+            game->score += 300 * (game->level + 1);
+            break;
+        case 4:
+            game->score += 1200 * (game->level + 1);
+            break;
+        default:
+            break;
+    }
+
+    game->rowsCleared += moreRowsCleared;
+    if (game->rowsCleared >= 10)
+    {
+        game->level += 1;
+        game->rowsCleared -= 10;
+    }
+}

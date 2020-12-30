@@ -9,6 +9,7 @@
 
 int main(void)
 {
+    char title[100];
     Game *game = (Game*) calloc(1, sizeof(Game));
     gameInit(game);
     
@@ -87,6 +88,8 @@ int main(void)
         pieceMove(game, piece, inactivePieces, DOWN);
         pieceDraw(game, piece);
         inactivePieceDraw(game, inactivePieces);
+        sprintf(title, "TETRIS ------Score: %ld  Level: %d------", game->score, game->level);
+        SDL_SetWindowTitle(game->window, title);
         SDL_RenderPresent(game->renderer);
     }
 

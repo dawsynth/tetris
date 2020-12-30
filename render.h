@@ -18,6 +18,9 @@ typedef struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
     unsigned long int time;
+    unsigned long int score;
+    unsigned long int rowsCleared;
+    unsigned int level;
     int w, h;
     SDL_Rect tetrominoes[7][4];
 } Game;
@@ -25,4 +28,5 @@ typedef struct {
 
 void gameInit(Game *game);
 void gameTerm(Game *game);
+void gameScoreUpdate(Game *game, unsigned int moreRowsCleared);
 #endif

@@ -14,7 +14,6 @@ void pieceInit(Game *game, Piece *piece)
         piece->tetromino[i] = game->tetrominoes[piece->pieceNum][i];
     }
     if (game->time <= 0) piece->pieceMoved = 0;
-    return;
 }
 
 void pieceDraw(Game *game, Piece *piece)
@@ -23,7 +22,6 @@ void pieceDraw(Game *game, Piece *piece)
     SDL_SetRenderDrawColor(game->renderer, piece->color[0], piece->color[1],piece->color[2], SDL_ALPHA_OPAQUE);
     SDL_RenderFillRects(game->renderer, piece->tetromino, 4);
     SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    return;
 }
 
 void pieceMove(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DIRECTION dir)
@@ -66,10 +64,12 @@ void pieceMove(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DI
             }
             else if ((pieceCollide(game, piece, inactivePieces, dir)) && (piece->pieceMoved + 1000 <= game->time)) {
                 pieceDeactivate(game, piece, inactivePieces);
+                unsigned int rowsCleared = inactivePieceClearRows(game, inactivePieces);
+                gameScoreUpdate(game, rowsCleared);
+                pieceInit(game, piece);
             }
             break;
     }
-    return;
 }
 
 int pieceCollide(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DIRECTION dir)
@@ -130,8 +130,6 @@ void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces)
         case 3:
         default:
             return;
-            break;
-
     }
     for (i = 0; i < 4; i++)
     {
@@ -148,7 +146,6 @@ void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces)
         piece->tetromino[i].x = xPrime[i];
         piece->tetromino[i].y = yPrime[i];
     }
-    return;
 }
 
 void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces)
@@ -165,11 +162,6 @@ void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces)
             inactivePieces->color[x][y][j] = piece->color[j];
         } 
     }
-
-    inactivePieceClearRows(game, inactivePieces);
-
-    pieceInit(game, piece);
-    return;
 }
 
 void inactivePieceDraw(Game *game, InactivePieces *inactivePieces)
@@ -189,7 +181,6 @@ void inactivePieceDraw(Game *game, InactivePieces *inactivePieces)
             }
         }
     }
-    return;
 }
 
 int inactivePieceCheck(Game *game, InactivePieces *inactivePieces) 
@@ -249,13 +240,15 @@ void inactivePieceShiftRows(Game *game, InactivePieces *inactivePieces, int init
     }
 }
 
-void inactivePieceClearRows(Game *game, InactivePieces *inactivePieces)
+int inactivePieceClearRows(Game *game, InactivePieces *inactivePieces)
 {
-
+    int rowsCleared = 0;
     int row = inactivePieceCheck(game, inactivePieces);
     while (row != -1)
     {
+        rowsCleared += 1;
         inactivePieceShiftRows(game, inactivePieces, inactivePieceClearRow(game, inactivePieces, row));
         row = inactivePieceCheck(game, inactivePieces);
     }
+    return rowsCleared;
 }
