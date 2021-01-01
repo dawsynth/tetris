@@ -8,11 +8,15 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
 
-#define TILE_WIDTH 10
-#define TILE_HEIGHT 10
+#define TILE_WIDTH 20
+#define TILE_HEIGHT 20
 
+typedef struct {
+    int x;
+    int y;
+} IntVec;
 
-void tetrominoesInit(SDL_Rect tetrominoes[7][4]);
+void tetrominoesInit(IntVec tetrominoes[7][4]);
 
 #endif
 

@@ -1,31 +1,27 @@
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_image.h>
+#include "core.h"
+#include "logic.h"
 #include "render.h"
-#include "tetris.h"
-#include "tetrominoes.h"
-
 
 int main(void)
 {
     char title[100];
     Game *game = (Game*) calloc(1, sizeof(Game));
     gameInit(game);
-    
-    Piece *piece = (Piece*) calloc(1, sizeof(Piece));
-    pieceInit(game, piece);
-   
+
     InactivePieces *inactivePieces = (InactivePieces*) calloc(1, sizeof(InactivePieces));
     int x, y;
     for (x = 0; x <= 10; x++)
     {
         for (y = 0; y <= 20; y++)
         {
-            inactivePieces->grid[x][y] = 0;
+            inactivePieces->grid[x][y] = EMPTY;
         }
     }
     
+    Piece *piece = (Piece*) calloc(1, sizeof(Piece));
+    pieceInit(game, piece, inactivePieces);
+
     SDL_Event event;
 
     int closeRequested = 0;
@@ -85,7 +81,7 @@ int main(void)
         }
         // Draw Image to Window
         game->time = SDL_GetTicks();
-        pieceMove(game, piece, inactivePieces, DOWN);
+        if (pieceMove(game, piece, inactivePieces, DOWN) != 0) closeRequested = 1;
         pieceDraw(game, piece);
         inactivePieceDraw(game, inactivePieces);
         sprintf(title, "TETRIS ------Score: %ld  Level: %d------", game->score, game->level);

@@ -1,75 +1,33 @@
 #include "render.h"
 
-
-void gameInit(Game *game)
+void pieceDraw(Game *game, Piece *piece)
 {
-    // Attempt to initialize graphics and timer system
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+    SDL_Rect tetromino[NUM_ACTIVE_TILES];
+    for (int i = 0; i < NUM_ACTIVE_TILES; i++)
     {
-        printf("Error initializing SDL: %s\n", SDL_GetError());
-        return;
+        tetromino[i] = (SDL_Rect) {.x = piece->x[i] * TILE_WIDTH, .y = piece->y[i] * TILE_HEIGHT, .w = TILE_WIDTH, .h = TILE_HEIGHT};
     }
-    game->window  = SDL_CreateWindow("Tetris",
-                                     SDL_WINDOWPOS_CENTERED,
-                                     SDL_WINDOWPOS_CENTERED,
-                                     DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0);
-	if (!game->window)
-	{
-		printf("Error Creating Window: %s\n", SDL_GetError());
-		SDL_Quit();
-		return;
-	}
 
-    // Create renderer which sets up graphics hardware
-    Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-    game->renderer = SDL_CreateRenderer(game->window, -1, render_flags);
-    if (!game->renderer)
-    {
-        printf("Error Creating Renderer: %s\n", SDL_GetError());
-        SDL_DestroyWindow(game->window);
-        SDL_Quit();
-        return;
-    }
-    game->time = 0;
-    game->score = 0;
-    game->level = 0;
-    game->rowsCleared = 0;
-    game->w = DEFAULT_WINDOW_WIDTH;
-    game->h = DEFAULT_WINDOW_HEIGHT;
-    tetrominoesInit(game->tetrominoes);
+    SDL_SetRenderDrawColor(game->renderer, piece->color[0], piece->color[1],piece->color[2], SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRects(game->renderer, tetromino, NUM_ACTIVE_TILES);
+    SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 }
 
-void gameTerm(Game *game)
+void inactivePieceDraw(Game *game, InactivePieces *inactivePieces)
 {
-    SDL_DestroyRenderer(game->renderer);
-	SDL_DestroyWindow(game->window);
-	SDL_Quit();    
-}
-
-void gameScoreUpdate(Game *game, unsigned int moreRowsCleared)
-{
-    switch (moreRowsCleared)
+    int x, y;
+    SDL_Rect toDraw = {.x = 0, .y = 0, .w = TILE_WIDTH, .h = TILE_HEIGHT};
+    for (x = 0; x < GRID_WIDTH; x++)
     {
-        case 1:
-            game->score += 40 * (game->level + 1);
-            break;
-        case 2:
-            game->score += 100 * (game->level + 1);
-            break;
-         case 3:
-            game->score += 300 * (game->level + 1);
-            break;
-        case 4:
-            game->score += 1200 * (game->level + 1);
-            break;
-        default:
-            break;
-    }
-
-    game->rowsCleared += moreRowsCleared;
-    if (game->rowsCleared >= 10)
-    {
-        game->level += 1;
-        game->rowsCleared -= 10;
+        for (y = 0; y < GRID_HEIGHT; y++)
+        {
+            if (inactivePieces->grid[x][y] == INACTIVE) {
+                SDL_SetRenderDrawColor(game->renderer, inactivePieces->color[x][y][0], inactivePieces->color[x][y][1], inactivePieces->color[x][y][2], SDL_ALPHA_OPAQUE);
+                toDraw.x = x * TILE_WIDTH;
+                toDraw.y = y * TILE_HEIGHT;
+                SDL_RenderFillRect(game->renderer, &toDraw);
+                SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            }
+        }
     }
 }
