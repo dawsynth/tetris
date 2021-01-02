@@ -9,10 +9,17 @@
 #include <SDL2/SDL_timer.h>
 #include "tetrominoes.h"
 
+#define MULTIPLIER 20
+#define GRID_WIDTH 10
+#define GRID_HEIGHT 20
+#define DEFAULT_WINDOW_WIDTH (GRID_WIDTH * MULTIPLIER)
+#define DEFAULT_WINDOW_HEIGHT (GRID_HEIGHT * MULTIPLIER)
 
-#define DEFAULT_WINDOW_WIDTH (200)
-#define DEFAULT_WINDOW_HEIGHT (400)
+enum TILE_TYPE {EMPTY = 0, INACTIVE = 1, ACTIVE = 2};
 
+typedef struct {
+    enum TILE_TYPE status[GRID_WIDTH][GRID_HEIGHT];
+} Grid;
 
 typedef struct {
     SDL_Window* window;
@@ -23,6 +30,7 @@ typedef struct {
     unsigned int level;
     int w, h;
     IntVec tetrominoes[7][4];
+    Grid *grid;
 } Game;
 
 

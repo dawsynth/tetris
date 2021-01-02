@@ -9,18 +9,8 @@ int main(void)
     Game *game = (Game*) calloc(1, sizeof(Game));
     gameInit(game);
 
-    InactivePieces *inactivePieces = (InactivePieces*) calloc(1, sizeof(InactivePieces));
-    int x, y;
-    for (x = 0; x <= 10; x++)
-    {
-        for (y = 0; y <= 20; y++)
-        {
-            inactivePieces->grid[x][y] = EMPTY;
-        }
-    }
-    
     Piece *piece = (Piece*) calloc(1, sizeof(Piece));
-    pieceInit(game, piece, inactivePieces);
+    pieceInit(game, piece);
 
     SDL_Event event;
 
@@ -42,19 +32,19 @@ int main(void)
                     {
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
-                            pieceRotate(game, piece, inactivePieces);
+                            pieceRotate(piece, game->grid);
                             break;
                         case SDL_SCANCODE_S:
                         case SDL_SCANCODE_DOWN:
-                            pieceMove(game, piece, inactivePieces, ACCELERATED_DOWN);
+                            pieceMove(game, piece, ACCELERATED_DOWN);
                             break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
-                            pieceMove(game, piece, inactivePieces, LEFT);
+                            pieceMove(game, piece, LEFT);
                             break;
                         case SDL_SCANCODE_D:
                         case SDL_SCANCODE_RIGHT:
-                            pieceMove(game, piece, inactivePieces, RIGHT);
+                            pieceMove(game, piece, RIGHT);
                             break;
                         case SDL_SCANCODE_ESCAPE:
                             closeRequested = 1;
@@ -81,9 +71,9 @@ int main(void)
         }
         // Draw Image to Window
         game->time = SDL_GetTicks();
-        if (pieceMove(game, piece, inactivePieces, DOWN) != 0) closeRequested = 1;
+        if (pieceMove(game, piece, DOWN) != 0) closeRequested = 1;
         pieceDraw(game, piece);
-        inactivePieceDraw(game, inactivePieces);
+        gridDraw(game);
         sprintf(title, "TETRIS ------Score: %ld  Level: %d------", game->score, game->level);
         SDL_SetWindowTitle(game->window, title);
         SDL_RenderPresent(game->renderer);
@@ -91,7 +81,6 @@ int main(void)
 
     // Clean up clean up everybody clean up
     gameTerm(game);
-    free(inactivePieces);
     free(piece);
     free(game);
 	return 0;

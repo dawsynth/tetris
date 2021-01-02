@@ -7,6 +7,6 @@
 #include "logic.h"
 
 void pieceDraw(Game *game, Piece *piece);
-void inactivePieceDraw(Game *game, InactivePieces *inactivePieces);
+void gridDraw(Game *game);
 
 #endif

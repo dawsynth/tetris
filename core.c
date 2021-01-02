@@ -37,13 +37,24 @@ void gameInit(Game *game)
     game->w = DEFAULT_WINDOW_WIDTH;
     game->h = DEFAULT_WINDOW_HEIGHT;
     tetrominoesInit(game->tetrominoes);
+
+    game->grid = (Grid*) calloc(1, sizeof(Grid));
+    int x, y;
+    for (x = 0; x < GRID_WIDTH; x++)
+    {
+        for (y = 0; y < GRID_HEIGHT; y++)
+        {
+            game->grid->status[x][y] = EMPTY;
+        }
+    }
 }
 
 void gameTerm(Game *game)
 {
     SDL_DestroyRenderer(game->renderer);
 	SDL_DestroyWindow(game->window);
-	SDL_Quit();    
+	SDL_Quit();
+    free(game->grid);
 }
 
 void gameScoreUpdate(Game *game, unsigned int moreRowsCleared)

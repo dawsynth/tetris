@@ -1,73 +1,70 @@
 #include "logic.h"
 
-int pieceInit(Game *game, Piece *piece, InactivePieces *inactivePieces)
+int pieceInit(Game *game, Piece *piece)
 {
     int i;
-    for (i = 0; i < NUM_COLORS; i++)
-    {
-        piece->color[i] = rand() % 256;
-    }
     piece->pieceNum = rand() % 7;
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
         piece->x[i] = game->tetrominoes[piece->pieceNum][i].x;
         piece->y[i] = game->tetrominoes[piece->pieceNum][i].y;
-        if (inactivePieces->grid[piece->x[i]][piece->y[i]] == INACTIVE) return -1;
+        if (game->grid->status[piece->x[i]][piece->y[i]] == INACTIVE) return -1;
     }
     if (game->time <= 0) piece->pieceMoved = 0;
     return 0;
 }
 
-int pieceMove(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DIRECTION dir)
+int pieceMove(Game *game, Piece *piece, enum DIRECTION dir)
 {
+    int i;
     switch(dir)
     {
         case RIGHT:
-            if (!(pieceCollide(game, piece, inactivePieces, dir))) {
-                piece->x[0] += SPEED;
-                piece->x[1] += SPEED;
-                piece->x[2] += SPEED;
-                piece->x[3] += SPEED;
+            if (!(pieceCollide(piece, game->grid, dir))) {
+                for (i = 0; i < NUM_ACTIVE_TILES; i++)
+                {
+                    piece->x[i] += SPEED;
+                }
             }
             break;
         case LEFT:
-            if (!(pieceCollide(game, piece, inactivePieces, dir))) { 
-                piece->x[0] -= SPEED;
-                piece->x[1] -= SPEED;
-                piece->x[2] -= SPEED;
-                piece->x[3] -= SPEED;
+            if (!(pieceCollide(piece, game->grid, dir))) { 
+                for (i = 0; i < NUM_ACTIVE_TILES; i++)
+                {
+                    piece->x[i] -= SPEED;
+                }
             }
             break;
         case ACCELERATED_DOWN:
-            if (!(pieceCollide(game, piece, inactivePieces, dir))) {
-                piece->y[0] += SPEED;
-                piece->y[1] += SPEED;
-                piece->y[2] += SPEED;
-                piece->y[3] += SPEED;
+            if (!(pieceCollide(piece, game->grid, dir))) {
+                for (i = 0; i < NUM_ACTIVE_TILES; i++)
+                {
+                    piece->y[i] += SPEED;
+                }
                 piece->pieceMoved = game->time;
             }
             break;
         case DOWN:
         default:
-            if (!(pieceCollide(game, piece, inactivePieces, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5))  <= game->time)) {
-                piece->y[0] += SPEED;
-                piece->y[1] += SPEED;
-                piece->y[2] += SPEED;
-                piece->y[3] += SPEED;
+            if (!(pieceCollide(piece, game->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5))  <= game->time)) {
+                for (i = 0; i < NUM_ACTIVE_TILES; i++)
+                {
+                    piece->y[i] += SPEED;
+                }
                 piece->pieceMoved = game->time; 
             }
-            else if ((pieceCollide(game, piece, inactivePieces, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5)) <= game->time)) {
-                pieceDeactivate(game, piece, inactivePieces);
-                unsigned int rowsCleared = inactivePieceClearRows(game, inactivePieces);
+            else if ((pieceCollide(piece, game->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5)) <= game->time)) {
+                pieceDeactivate(piece, game->grid);
+                unsigned int rowsCleared = gridClearRows(game->grid);
                 gameScoreUpdate(game, rowsCleared);
-                if (pieceInit(game, piece, inactivePieces) != 0) return -1;
+                if (pieceInit(game, piece) != 0) return -1;
             }
             break;
     }
     return 0;
 }
 
-int pieceCollide(Game *game, Piece *piece, InactivePieces *inactivePieces, enum DIRECTION dir)
+int pieceCollide(Piece *piece, Grid *grid, enum DIRECTION dir)
 {
     int i;
     switch (dir)
@@ -76,14 +73,14 @@ int pieceCollide(Game *game, Piece *piece, InactivePieces *inactivePieces, enum 
             for (i = 0; i < NUM_ACTIVE_TILES; i++)
             {
                 if (piece->x[i] + 1 >= GRID_WIDTH) return 1;
-                else if (inactivePieces->grid[piece->x[i] + 1][piece->y[i]] == INACTIVE) return 1;
+                else if (grid->status[piece->x[i] + 1][piece->y[i]] == INACTIVE) return 1;
             }
             break;
         case LEFT:
             for (i = 0; i < NUM_ACTIVE_TILES; i++)
             {
                 if (piece->x[i] == 0) return 1;
-                else if (inactivePieces->grid[piece->x[i] - 1][piece->y[i]] == INACTIVE) return 1;
+                else if (grid->status[piece->x[i] - 1][piece->y[i]] == INACTIVE) return 1;
             }
             break;
         case ACCELERATED_DOWN:
@@ -92,14 +89,14 @@ int pieceCollide(Game *game, Piece *piece, InactivePieces *inactivePieces, enum 
             for (i = 0; i < NUM_ACTIVE_TILES; i++)
             {
                 if (piece->y[i] + 1 >= GRID_HEIGHT) return 1;
-                else if (inactivePieces->grid[piece->x[i]][piece->y[i] + 1] == INACTIVE) return 1;
+                else if (grid->status[piece->x[i]][piece->y[i] + 1] == INACTIVE) return 1;
             }
             break;
     }
     return 0;
 }
 
-void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces)
+void pieceRotate(Piece *piece, Grid *grid)
 {
     int i;
     int xPrime[NUM_ACTIVE_TILES], yPrime[NUM_ACTIVE_TILES];
@@ -124,11 +121,9 @@ void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces)
     {
         xPrime[i] = piece->x[originPiece] - (piece->y[i] - piece->y[originPiece]);
         yPrime[i] = piece->y[originPiece] + (piece->x[i] - piece->x[originPiece]);
-        if ((inactivePieces->grid[xPrime[i]][yPrime[i]]) && 
-                (inactivePieces->grid[xPrime[i]][yPrime[i]]))
-        {
-            return;
-        }
+        if (grid->status[xPrime[i]][yPrime[i]] == INACTIVE) return;
+        else if (xPrime[i] >= GRID_WIDTH) return;
+        else if (xPrime[i] < 0) return;
     }
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
@@ -137,21 +132,17 @@ void pieceRotate(Game *game, Piece *piece, InactivePieces *inactivePieces)
     }
 }
 
-void pieceDeactivate(Game *game, Piece *piece, InactivePieces *inactivePieces)
+void pieceDeactivate(Piece *piece, Grid *grid)
 {
     
-    int i, j;
+    int i;
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
-        inactivePieces->grid[piece->x[i]][piece->y[i]] = INACTIVE;
-        for (j = 0; j < NUM_COLORS; j++)
-        {
-            inactivePieces->color[piece->x[i]][piece->y[i]][j] = piece->color[j];
-        } 
+        grid->status[piece->x[i]][piece->y[i]] = INACTIVE;
     }
 }
 
-int inactivePieceCheck(Game *game, InactivePieces *inactivePieces) 
+int gridCheck(Grid *grid) 
 {
     int x, y;
     for (y = 0; y < GRID_HEIGHT; y++)
@@ -159,64 +150,56 @@ int inactivePieceCheck(Game *game, InactivePieces *inactivePieces)
         int line = 1;
         for (x = 0; x < GRID_WIDTH; x++)
         {
-            line &= inactivePieces->grid[x][y];
+            line &= grid->status[x][y];
         }
         if (line) return y;
     }
     return -1;
 }
 
-int inactivePieceClearRow(Game *game, InactivePieces *inactivePieces, int row)
-{
-    int x, j;
-    for (x = 0; x < GRID_WIDTH; x++)
-    {
-        inactivePieces->grid[x][row] = 0;
-        for (j = 0; j < NUM_COLORS; j++)
-        {
-            inactivePieces->color[x][row][j] = 0;
-        }
-    }
-    return row;
-}
-
-int inactivePieceCheckRowEmpty(Game *game, InactivePieces *inactivePieces, int row)
+int gridClearRow(Grid *grid, int row)
 {
     int x;
     for (x = 0; x < GRID_WIDTH; x++)
     {
-        if (inactivePieces->grid[x][row] != 0) return 0;
+        grid->status[x][row] = 0;
+    }
+    return row;
+}
+
+int gridCheckRowEmpty(Grid *grid, int row)
+{
+    int x;
+    for (x = 0; x < GRID_WIDTH; x++)
+    {
+        if (grid->status[x][row] != 0) return 0;
     }
     return 1;
 }
 
-void inactivePieceShiftRows(Game *game, InactivePieces *inactivePieces, int initialRow)
+void gridShiftRows(Grid *grid, int initialRow)
 {
-    int row, x, j;
-    for (row = initialRow; inactivePieceCheckRowEmpty(game, inactivePieces, row - 1) != 1; row -= 1)
+    int row, x;
+    for (row = initialRow; gridCheckRowEmpty(grid, row - 1) != 1; row -= 1)
     {
-        if (inactivePieceCheckRowEmpty(game, inactivePieces, row) != 1) break;
+        if (gridCheckRowEmpty(grid, row) != 1) break;
         for (x = 0; x < GRID_WIDTH; x++)
         {
-            inactivePieces->grid[x][row] = inactivePieces->grid[x][row - 1];
-            for (j = 0; j < NUM_COLORS; j++)
-            {
-                inactivePieces->color[x][row][j] = inactivePieces->color[x][row - 1][j];
-            }
+            grid->status[x][row] = grid->status[x][row - 1];
         }
-        inactivePieceClearRow(game, inactivePieces, row - 1);
+        gridClearRow(grid, row - 1);
     }
 }
 
-int inactivePieceClearRows(Game *game, InactivePieces *inactivePieces)
+int gridClearRows(Grid *grid)
 {
     int rowsCleared = 0;
-    int row = inactivePieceCheck(game, inactivePieces);
+    int row = gridCheck(grid);
     while (row != -1)
     {
         rowsCleared += 1;
-        inactivePieceShiftRows(game, inactivePieces, inactivePieceClearRow(game, inactivePieces, row));
-        row = inactivePieceCheck(game, inactivePieces);
+        gridShiftRows(grid, gridClearRow(grid, row));
+        row = gridCheck(grid);
     }
     return rowsCleared;
 }
