@@ -1,16 +1,18 @@
 #include <stdio.h>
-#include "core.h"
 #include "logic.h"
 #include "render.h"
 
 int main(void)
 {
     char title[100];
-    Game *game = (Game*) calloc(1, sizeof(Game));
+    GameData *game = (GameData*) calloc(1, sizeof(GameData));
     gameInit(game);
 
     Piece *piece = (Piece*) calloc(1, sizeof(Piece));
     pieceInit(game, piece);
+
+    GraphicsPackage *graphics = (GraphicsPackage*) calloc(1, sizeof(GraphicsPackage));
+    graphicsInit(graphics);
 
     SDL_Event event;
 
@@ -18,7 +20,7 @@ int main(void)
 
     while (!closeRequested)
     {
-        SDL_RenderClear(game->renderer);
+        SDL_RenderClear(graphics->renderer);
         // Process all the events
         while (SDL_PollEvent(&event))
         {
@@ -72,15 +74,16 @@ int main(void)
         // Draw Image to Window
         game->time = SDL_GetTicks();
         if (pieceMove(game, piece, DOWN) != 0) closeRequested = 1;
-        pieceDraw(game, piece);
-        gridDraw(game);
+        pieceDraw(graphics, piece);
+        gridDraw(game, graphics);
         sprintf(title, "TETRIS ------Score: %ld  Level: %d------", game->score, game->level);
-        SDL_SetWindowTitle(game->window, title);
-        SDL_RenderPresent(game->renderer);
+        SDL_SetWindowTitle(graphics->window, title);
+        SDL_RenderPresent(graphics->renderer);
     }
 
     // Clean up clean up everybody clean up
     gameTerm(game);
+    graphicsTerm(graphics);
     free(piece);
     free(game);
 	return 0;

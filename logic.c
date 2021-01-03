@@ -1,26 +1,78 @@
 #include "logic.h"
 
-int pieceInit(Game *game, Piece *piece)
+void gameInit(GameData *data)
+{
+    data->time = 0;
+    data->score = 0;
+    data->level = 0;
+    data->rowsCleared = 0;
+    tetrominoesInit(data->tetrominoes);
+
+    data->grid = (Grid*) calloc(1, sizeof(Grid));
+    int x, y;
+    for (x = 0; x < GRID_WIDTH; x++)
+    {
+        for (y = 0; y < GRID_HEIGHT; y++)
+        {
+            data->grid->status[x][y] = EMPTY;
+        }
+    }
+}
+
+void gameTerm(GameData *data)
+{
+    free(data->grid);
+}
+
+void gameDataScoreUpdate(GameData *data, unsigned int moreRowsCleared)
+{
+    switch (moreRowsCleared)
+    {
+        case 1:
+            data->score += 40 * (data->level + 1);
+            break;
+        case 2:
+            data->score += 100 * (data->level + 1);
+            break;
+         case 3:
+            data->score += 300 * (data->level + 1);
+            break;
+        case 4:
+            data->score += 1200 * (data->level + 1);
+            break;
+        default:
+            break;
+    }
+
+    data->rowsCleared += moreRowsCleared;
+    if (data->rowsCleared >= 10)
+    {
+        data->level += 1;
+        data->rowsCleared -= 10;
+    }
+}
+
+int pieceInit(GameData *data, Piece *piece)
 {
     int i;
     piece->pieceNum = rand() % 7;
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
-        piece->x[i] = game->tetrominoes[piece->pieceNum][i].x;
-        piece->y[i] = game->tetrominoes[piece->pieceNum][i].y;
-        if (game->grid->status[piece->x[i]][piece->y[i]] == INACTIVE) return -1;
+        piece->x[i] = data->tetrominoes[piece->pieceNum][i][0];
+        piece->y[i] = data->tetrominoes[piece->pieceNum][i][1];
+        if (data->grid->status[piece->x[i]][piece->y[i]] == INACTIVE) return -1;
     }
-    if (game->time <= 0) piece->pieceMoved = 0;
+    if (data->time <= 0) piece->pieceMoved = 0;
     return 0;
 }
 
-int pieceMove(Game *game, Piece *piece, enum DIRECTION dir)
+int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir)
 {
     int i;
     switch(dir)
     {
         case RIGHT:
-            if (!(pieceCollide(piece, game->grid, dir))) {
+            if (!(pieceCollide(piece, data->grid, dir))) {
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
                     piece->x[i] += SPEED;
@@ -28,7 +80,7 @@ int pieceMove(Game *game, Piece *piece, enum DIRECTION dir)
             }
             break;
         case LEFT:
-            if (!(pieceCollide(piece, game->grid, dir))) { 
+            if (!(pieceCollide(piece, data->grid, dir))) { 
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
                     piece->x[i] -= SPEED;
@@ -36,28 +88,28 @@ int pieceMove(Game *game, Piece *piece, enum DIRECTION dir)
             }
             break;
         case ACCELERATED_DOWN:
-            if (!(pieceCollide(piece, game->grid, dir))) {
+            if (!(pieceCollide(piece, data->grid, dir))) {
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
                     piece->y[i] += SPEED;
                 }
-                piece->pieceMoved = game->time;
+                piece->pieceMoved = data->time;
             }
             break;
         case DOWN:
         default:
-            if (!(pieceCollide(piece, game->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5))  <= game->time)) {
+            if (!(pieceCollide(piece, data->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (data->level * 5))  <= data->time)) {
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
                     piece->y[i] += SPEED;
                 }
-                piece->pieceMoved = game->time; 
+                piece->pieceMoved = data->time; 
             }
-            else if ((pieceCollide(piece, game->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (game->level * 5)) <= game->time)) {
-                pieceDeactivate(piece, game->grid);
-                unsigned int rowsCleared = gridClearRows(game->grid);
-                gameScoreUpdate(game, rowsCleared);
-                if (pieceInit(game, piece) != 0) return -1;
+            else if ((pieceCollide(piece, data->grid, dir)) && (piece->pieceMoved + (1000 / 60) * (48 - (data->level * 5)) <= data->time)) {
+                pieceDeactivate(piece, data->grid);
+                unsigned int rowsCleared = gridClearRows(data->grid);
+                gameDataScoreUpdate(data, rowsCleared);
+                if (pieceInit(data, piece) != 0) return -1;
             }
             break;
     }
@@ -203,3 +255,4 @@ int gridClearRows(Grid *grid)
     }
     return rowsCleared;
 }
+

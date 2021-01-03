@@ -1,16 +1,19 @@
 #ifndef LOGIC_H_INCLUDED
 #define LOGIC_H_INCLUDED
 
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL.h>
-#include "core.h"
 #include "tetrominoes.h"
 
-#define SPEED 1
+#define GRID_WIDTH 10
+#define GRID_HEIGHT 20
 #define NUM_ACTIVE_TILES 4
-#define NUM_COLORS 3
+#define SPEED 1
 
 enum DIRECTION {DOWN, RIGHT, LEFT, ACCELERATED_DOWN};
+enum TILE_TYPE {EMPTY = 0, INACTIVE = 1, ACTIVE = 2};
+
+typedef struct {
+    enum TILE_TYPE status[GRID_WIDTH][GRID_HEIGHT];
+} Grid;
 
 typedef struct {
     int x[NUM_ACTIVE_TILES];
@@ -19,9 +22,22 @@ typedef struct {
     unsigned long int pieceMoved;
 } Piece;
 
+typedef struct {
+    unsigned long int time;
+    unsigned int rowsCleared;
+    unsigned long int score;
+    unsigned int level;
+    unsigned int tetrominoes[7][4][2];
+    Grid *grid;
+} GameData;
 
-int pieceInit(Game *game, Piece *piece);
-int pieceMove(Game *game, Piece *piece, enum DIRECTION dir);
+void gameInit(GameData *data);
+void gameTerm(GameData *data);
+
+void gameDataScoreUpdate(GameData *data, unsigned int moreRowsCleared);
+
+int pieceInit(GameData *data, Piece *piece);
+int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir);
 int pieceCollide(Piece *piece, Grid *grid, enum DIRECTION dir);
 void pieceRotate(Piece *piece, Grid *grid);
 void pieceDeactivate(Piece *piece, Grid *grid);
