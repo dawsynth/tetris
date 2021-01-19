@@ -29,6 +29,13 @@ void graphicsInit(GraphicsPackage *graphics)
         SDL_Quit();
         return;
     }
+    for (int x = 0; x > GRID_WIDTH; x++)
+    {
+        for (int y = 0; y > GRID_HEIGHT; y++)
+        {
+            graphics->gridColors[x][y] = BLACK;
+        }
+    }
 }
 
 void graphicsTerm(GraphicsPackage *graphics)
@@ -38,16 +45,42 @@ void graphicsTerm(GraphicsPackage *graphics)
 	SDL_Quit();
 }
 
-void pieceDraw(GraphicsPackage *graphics, Piece *piece)
+void pieceDraw(GraphicsPackage *graphics, Piece *piece, int fill)
 {
     SDL_Rect tetromino[NUM_ACTIVE_TILES];
     for (int i = 0; i < NUM_ACTIVE_TILES; i++)
     {
         tetromino[i] = (SDL_Rect) {.x = piece->x[i] * TILE_WIDTH, .y = piece->y[i] * TILE_HEIGHT, .w = TILE_WIDTH, .h = TILE_HEIGHT};
     }
-
-    SDL_SetRenderDrawColor(graphics->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-    SDL_RenderFillRects(graphics->renderer, tetromino, NUM_ACTIVE_TILES);
+    switch (piece->pieceNum)
+    {
+        case 0:
+            SDL_SetRenderDrawColor(graphics->renderer, SKYBLUE.r, SKYBLUE.b, SKYBLUE.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 1:
+            SDL_SetRenderDrawColor(graphics->renderer, BLUE.r, BLUE.b, BLUE.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 2:
+            SDL_SetRenderDrawColor(graphics->renderer, ORANGE.r, ORANGE.b, ORANGE.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 3:
+            SDL_SetRenderDrawColor(graphics->renderer, YELLOW.r, YELLOW.b, YELLOW.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 4:
+            SDL_SetRenderDrawColor(graphics->renderer, PURPLE.r, PURPLE.b, PURPLE.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 5:
+            SDL_SetRenderDrawColor(graphics->renderer, GREEN.r, GREEN.b, GREEN.g, SDL_ALPHA_OPAQUE);
+            break;
+        case 6:
+            SDL_SetRenderDrawColor(graphics->renderer, RED.r, RED.b, RED.g, SDL_ALPHA_OPAQUE);
+            break;
+        default:
+            SDL_SetRenderDrawColor(graphics->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            break;
+    }
+    if (fill) SDL_RenderFillRects(graphics->renderer, tetromino, NUM_ACTIVE_TILES);
+    else SDL_RenderDrawRects(graphics->renderer, tetromino, NUM_ACTIVE_TILES);
     SDL_SetRenderDrawColor(graphics->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 }
 
@@ -59,8 +92,35 @@ void gridDraw(GameData *data, GraphicsPackage *graphics)
     {
         for (y = 0; y < GRID_HEIGHT; y++)
         {
-            if (data->grid->status[x][y] == INACTIVE) {
-                SDL_SetRenderDrawColor(graphics->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            if (data->grid->status[x][y] == INACTIVE) 
+            {
+                switch (data->grid->type[x][y])
+                {
+                    case 0:
+                        SDL_SetRenderDrawColor(graphics->renderer, SKYBLUE.r, SKYBLUE.b, SKYBLUE.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 1:
+                        SDL_SetRenderDrawColor(graphics->renderer, BLUE.r, BLUE.b, BLUE.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 2:
+                        SDL_SetRenderDrawColor(graphics->renderer, ORANGE.r, ORANGE.b, ORANGE.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 3:
+                        SDL_SetRenderDrawColor(graphics->renderer, YELLOW.r, YELLOW.b, YELLOW.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 4:
+                        SDL_SetRenderDrawColor(graphics->renderer, PURPLE.r, PURPLE.b, PURPLE.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 5:
+                        SDL_SetRenderDrawColor(graphics->renderer, GREEN.r, GREEN.b, GREEN.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    case 6:
+                        SDL_SetRenderDrawColor(graphics->renderer, RED.r, RED.b, RED.g, SDL_ALPHA_OPAQUE);
+                        break;
+                    default:
+                        SDL_SetRenderDrawColor(graphics->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+                        break;
+                }
                 toDraw.x = x * TILE_WIDTH;
                 toDraw.y = y * TILE_HEIGHT;
                 SDL_RenderFillRect(graphics->renderer, &toDraw);

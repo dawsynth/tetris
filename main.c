@@ -9,7 +9,8 @@ int main(void)
     gameInit(game);
 
     Piece *piece = (Piece*) calloc(1, sizeof(Piece));
-    pieceInit(game, piece);
+    Piece *shadowPiece = (Piece*) calloc(1, sizeof(Piece));
+    pieceInit(game, piece, shadowPiece);
 
     GraphicsPackage *graphics = (GraphicsPackage*) calloc(1, sizeof(GraphicsPackage));
     graphicsInit(graphics);
@@ -34,19 +35,22 @@ int main(void)
                     {
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
-                            pieceRotate(piece, game->grid);
+                            pieceRotate(piece, shadowPiece, game->grid);
                             break;
                         case SDL_SCANCODE_S:
                         case SDL_SCANCODE_DOWN:
-                            pieceMove(game, piece, ACCELERATED_DOWN);
+                            pieceMove(game, piece, shadowPiece, ACCELERATED_DOWN);
                             break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
-                            pieceMove(game, piece, LEFT);
+                            pieceMove(game, piece, shadowPiece, LEFT);
                             break;
                         case SDL_SCANCODE_D:
                         case SDL_SCANCODE_RIGHT:
-                            pieceMove(game, piece, RIGHT);
+                            pieceMove(game, piece, shadowPiece, RIGHT);
+                            break;
+                        case SDL_SCANCODE_SPACE:
+                            pieceSlam(game->grid, piece);
                             break;
                         case SDL_SCANCODE_ESCAPE:
                             closeRequested = 1;
@@ -73,8 +77,9 @@ int main(void)
         }
         // Draw Image to Window
         game->time = SDL_GetTicks();
-        if (pieceMove(game, piece, DOWN) != 0) closeRequested = 1;
-        pieceDraw(graphics, piece);
+        if (pieceMove(game, piece, shadowPiece, DOWN) != 0) closeRequested = 1;
+        pieceDraw(graphics, piece, 1);
+        pieceDraw(graphics, shadowPiece, 0);
         gridDraw(game, graphics);
         sprintf(title, "TETRIS ------Score: %ld  Level: %d------", game->score, game->level);
         SDL_SetWindowTitle(graphics->window, title);

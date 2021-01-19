@@ -15,6 +15,7 @@ void gameInit(GameData *data)
         for (y = 0; y < GRID_HEIGHT; y++)
         {
             data->grid->status[x][y] = EMPTY;
+            data->grid->type[x][y] = 10;
         }
     }
 }
@@ -52,21 +53,25 @@ void gameDataScoreUpdate(GameData *data, unsigned int moreRowsCleared)
     }
 }
 
-int pieceInit(GameData *data, Piece *piece)
+int pieceInit(GameData *data, Piece *piece, Piece *shadowPiece)
 {
     int i;
     piece->pieceNum = rand() % 7;
+    shadowPiece->pieceNum = piece->pieceNum;
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
         piece->x[i] = data->tetrominoes[piece->pieceNum][i][0];
         piece->y[i] = data->tetrominoes[piece->pieceNum][i][1];
+        shadowPiece->x[i] = piece->x[i];
+        shadowPiece->y[i] = piece->y[i];
         if (data->grid->status[piece->x[i]][piece->y[i]] == INACTIVE) return -1;
     }
     if (data->time <= 0) piece->pieceMoved = 0;
+    pieceSlam(data->grid, shadowPiece);
     return 0;
 }
 
-int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir)
+int pieceMove(GameData *data, Piece *piece, Piece *shadowPiece, enum DIRECTION dir)
 {
     int i;
     switch(dir)
@@ -75,16 +80,22 @@ int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir)
             if (!(pieceCollide(piece, data->grid, dir))) {
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
+                    shadowPiece->y[i] = piece->y[i];
                     piece->x[i] += SPEED;
+                    shadowPiece->x[i] = piece->x[i];
                 }
+                pieceSlam(data->grid, shadowPiece);
             }
             break;
         case LEFT:
             if (!(pieceCollide(piece, data->grid, dir))) { 
                 for (i = 0; i < NUM_ACTIVE_TILES; i++)
                 {
+                    shadowPiece->y[i] = piece->y[i];
                     piece->x[i] -= SPEED;
+                    shadowPiece->x[i] = piece->x[i];
                 }
+                pieceSlam(data->grid, shadowPiece);
             }
             break;
         case ACCELERATED_DOWN:
@@ -109,7 +120,7 @@ int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir)
                 pieceDeactivate(piece, data->grid);
                 unsigned int rowsCleared = gridClearRows(data->grid);
                 gameDataScoreUpdate(data, rowsCleared);
-                if (pieceInit(data, piece) != 0) return -1;
+                if (pieceInit(data, piece, shadowPiece) != 0) return -1;
             }
             break;
     }
@@ -148,7 +159,19 @@ int pieceCollide(Piece *piece, Grid *grid, enum DIRECTION dir)
     return 0;
 }
 
-void pieceRotate(Piece *piece, Grid *grid)
+void pieceSlam(Grid *grid, Piece *piece)
+{
+    int i;
+    while (!pieceCollide(piece, grid, ACCELERATED_DOWN))
+    {
+        for (i = 0; i < NUM_ACTIVE_TILES; i++)
+        {
+            piece->y[i] += SPEED;
+        }
+    }
+}
+
+void pieceRotate(Piece *piece, Piece *shadowPiece, Grid *grid)
 {
     int i;
     int xPrime[NUM_ACTIVE_TILES], yPrime[NUM_ACTIVE_TILES];
@@ -180,8 +203,11 @@ void pieceRotate(Piece *piece, Grid *grid)
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
         piece->x[i] = xPrime[i];
+        shadowPiece->x[i] = piece->x[i];
         piece->y[i] = yPrime[i];
+        shadowPiece->y[i] = piece->y[i];
     }
+    pieceSlam(grid, shadowPiece);
 }
 
 void pieceDeactivate(Piece *piece, Grid *grid)
@@ -191,6 +217,7 @@ void pieceDeactivate(Piece *piece, Grid *grid)
     for (i = 0; i < NUM_ACTIVE_TILES; i++)
     {
         grid->status[piece->x[i]][piece->y[i]] = INACTIVE;
+        grid->type[piece->x[i]][piece->y[i]] = piece->pieceNum;
     }
 }
 

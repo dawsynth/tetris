@@ -28,6 +28,10 @@ $(EXEC): $(OBJS) $(HDRS) Makefile
 # recipe for building object files
 #$(OBJS): $(@:.o=.c) $(HDRS) Makefile
 #	$(CC) -o $@ $(@:.o=.c) -c $(CFLAGS)
+install:
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f ${EXEC} ${DESTDIR}${PREFIX}/bin
+	chmod 755 ${DESTDIR}${PREFIX}/bin/${EXEC}
 
 # recipe to clean the workspace
 clean:

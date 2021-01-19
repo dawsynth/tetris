@@ -13,6 +13,7 @@ enum TILE_TYPE {EMPTY = 0, INACTIVE = 1, ACTIVE = 2};
 
 typedef struct {
     enum TILE_TYPE status[GRID_WIDTH][GRID_HEIGHT];
+    unsigned int type[GRID_WIDTH][GRID_HEIGHT];
 } Grid;
 
 typedef struct {
@@ -36,10 +37,11 @@ void gameTerm(GameData *data);
 
 void gameDataScoreUpdate(GameData *data, unsigned int moreRowsCleared);
 
-int pieceInit(GameData *data, Piece *piece);
-int pieceMove(GameData *data, Piece *piece, enum DIRECTION dir);
+int pieceInit(GameData *data, Piece *piece, Piece *shadowPiece);
+int pieceMove(GameData *data, Piece *piece, Piece *shadowPiece, enum DIRECTION dir);
 int pieceCollide(Piece *piece, Grid *grid, enum DIRECTION dir);
-void pieceRotate(Piece *piece, Grid *grid);
+void pieceSlam(Grid *grid, Piece *piece);
+void pieceRotate(Piece *piece, Piece *shadowPiece, Grid *grid);
 void pieceDeactivate(Piece *piece, Grid *grid);
 
 int gridStatusCheck(Grid *grid);
