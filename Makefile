@@ -1,40 +1,28 @@
-# A simple Makefile for compiling small SDL projects
+TARGETS := tetris tetris.js
 
-# set the compiler
-CC := gcc
+all: desktop
+desktop: tetris
+web: tetris.js
 
-# set the compiler flags
-CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -O0 --std=c99 -Wall -lSDL2_image -lm
+desktop: CC = gcc
+web: CC = emcc
 
-# add header files here
-HDRS := logic.h render.h tetrominoes.h
+desktop: CFLAGS = `sdl2-config --libs --cflags` -ggdb3 -O0 --std=c99 -Wall -lSDL2 -lm
+web: CFLAGS = -s USE_SDL=2
 
-# add source files here
-SRCS := main.c logic.c render.c tetrominoes.c
+HDRS := render.h logic.h tetrominoes.h
 
-# generate names of object files
+SRCS := main.c render.c logic.c tetrominoes.c
+
 OBJS := $(SRCS:.c=.o)
 
-# name of executable
-EXEC := tetris
+$(OBJS) : $(@:.o=.c) $(HDRS) Makefile
+	$(CC) -c $(@:.o=.c) -o $@ $(CFLAGS)
 
-# default recipe
-all: $(EXEC)
-
-# recipe for building the final executable
-$(EXEC): $(OBJS) $(HDRS) Makefile
+$(TARGETS) : $(OBJS) $(HDRS) Makefile
 	$(CC) -o $@ $(OBJS) $(CFLAGS)
 
-# recipe for building object files
-#$(OBJS): $(@:.o=.c) $(HDRS) Makefile
-#	$(CC) -o $@ $(@:.o=.c) -c $(CFLAGS)
-install:
-	mkdir -p ${DESTDIR}${PREFIX}/bin
-	cp -f ${EXEC} ${DESTDIR}${PREFIX}/bin
-	chmod 755 ${DESTDIR}${PREFIX}/bin/${EXEC}
-
-# recipe to clean the workspace
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -f $(TARGETS) $(OBJS) *.wasm
 
-.PHONY: all clean
+.PHONY: all desktop web clean
